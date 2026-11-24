@@ -24,14 +24,37 @@ export function MobileFilterDrawer({
   activeCount,
 }: MobileFilterDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
+  const previousActiveElementRef = useRef<HTMLElement | null>(null);
 
   // Khóa cuộn trang và lắng nghe phím Esc để đóng
   useEffect(() => {
     if (!isOpen) return;
 
+    previousActiveElementRef.current = document.activeElement as HTMLElement | null;
+    const originalOverflow = document.body.style.overflow;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
+        e.preventDefault();
         onClose();
+        return;
+      }
+
+      if (e.key === "Tab" && drawerRef.current) {
+        const focusableElements = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
       }
     };
 
@@ -43,7 +66,8 @@ export function MobileFilterDrawer({
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = originalOverflow;
+      previousActiveElementRef.current?.focus();
     };
   }, [isOpen, onClose]);
 

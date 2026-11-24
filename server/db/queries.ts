@@ -1,11 +1,23 @@
 import type { PoolClient } from "@neondatabase/serverless";
 import { query, withTransaction } from "./client.js";
 import { normalizeText } from "../../shared/text.js";
+import { calculateAge } from "../../shared/validators.js";
 import type {
   JobListItem,
   JobSortOption,
   JobMetaResponse,
   ApplicationStatus,
+  EmployerSummary,
+  EmployerCompany,
+  EmployerJobListItem,
+  EmployerApplicant,
+  CreateJobInput,
+  UpdateJobInput,
+  Job,
+  DayOfWeek,
+  Shift,
+  WorkType,
+  JobStatus,
 } from "../../shared/types.js";
 
 // ==========================================
@@ -523,11 +535,8 @@ export async function getSavedJobsByUserId(userId: string): Promise<any[]> {
   `;
   const rows = await query<any>(sql, [userId]);
 
-  return rows.map((r) => ({
-    user_id: userId,
-    job_id: String(r.id),
-    saved_at: r.saved_at instanceof Date ? r.saved_at.toISOString() : String(r.saved_at),
-    job: {
+  return rows.map((r) => {
+    const jobItem = {
       id: String(r.id),
       company_id: String(r.company_id),
       title: r.title,
@@ -547,8 +556,16 @@ export async function getSavedJobsByUserId(userId: string): Promise<any[]> {
       posted_at: r.posted_at instanceof Date ? r.posted_at.toISOString() : String(r.posted_at),
       company_name: r.company_name,
       company_color_hex: r.company_color_hex,
-    },
-  }));
+    };
+
+    return {
+      ...jobItem,
+      user_id: userId,
+      job_id: String(r.id),
+      saved_at: r.saved_at instanceof Date ? r.saved_at.toISOString() : String(r.saved_at),
+      job: jobItem,
+    };
+  });
 }
 
 export async function saveJob(userId: string, jobId: string): Promise<boolean> {
@@ -692,6 +709,111 @@ export async function getTableStatusCounts(): Promise<{
     applications: parseInt(applications[0]?.count || "0", 10),
   };
 }
+
+// ==========================================
+// 6. QUẢN LÝ TIN VÀ ỨNG VIÊN NHÀ TUYỂN DỤNG
+// ==========================================
+
+/** Lấy toàn bộ số liệu tổng quan cho các công ty thuộc nhà tuyển dụng. */
+export async function getEmployerSummary(userId: string): Promise<EmployerSummary> {
+  const rows = await query<any>(`SELECT
+    COUNT(DISTINCT j.id) FILTER (WHERE j.status = 'open') AS open_jobs,
+    COUNT(DISTINCT j.id) FILTER (WHERE j.status = 'closed') AS closed_jobs,
+    COUNT(a.id) FILTER (WHERE a.status = 'moi') AS new_applications,
+    COUNT(a.id) FILTER (WHERE a.status = 'hen-phong-van') AS interview_applications,
+    COUNT(a.id) AS total_applications
+    FROM companies c LEFT JOIN jobs j ON j.company_id = c.id
+    LEFT JOIN applications a ON a.job_id = j.id WHERE c.owner_user_id = $1`, [userId]);
+  const row = rows[0] || {};
+  return { openJobs: Number(row.open_jobs || 0), closedJobs: Number(row.closed_jobs || 0), newApplications: Number(row.new_applications || 0), interviewApplications: Number(row.interview_applications || 0), totalApplications: Number(row.total_applications || 0) };
+}
+
+/** Trả về các công ty mà người dùng hiện tại sở hữu. */
+export async function getEmployerCompanies(userId: string): Promise<EmployerCompany[]> {
+  const rows = await query<any>("SELECT id, name, color_hex FROM companies WHERE owner_user_id = $1 ORDER BY name", [userId]);
+  return rows.map((row) => ({ id: String(row.id), name: row.name, color_hex: row.color_hex }));
+}
+
+/** Danh sách tin của nhà tuyển dụng kèm số lượng hồ sơ theo trạng thái. */
+export async function getEmployerJobs(userId: string): Promise<EmployerJobListItem[]> {
+  const rows = await query<any>(`SELECT j.*, c.name AS company_name, c.color_hex AS company_color_hex,
+    COUNT(a.id) AS applicant_count,
+    COUNT(a.id) FILTER (WHERE a.status = 'moi') AS new_applicant_count,
+    COUNT(a.id) FILTER (WHERE a.status = 'hen-phong-van') AS interview_applicant_count
+    FROM jobs j JOIN companies c ON c.id = j.company_id
+    LEFT JOIN applications a ON a.job_id = j.id WHERE c.owner_user_id = $1
+    GROUP BY j.id, c.name, c.color_hex ORDER BY j.posted_at DESC`, [userId]);
+  return rows.map((row) => ({ ...mapEmployerJob(row), company_name: row.company_name, company_color_hex: row.company_color_hex, applicant_count: Number(row.applicant_count), new_applicant_count: Number(row.new_applicant_count), interview_applicant_count: Number(row.interview_applicant_count) }));
+}
+
+/** Xem một tin chỉ khi công ty sở hữu tin thuộc về nhà tuyển dụng. */
+export async function getEmployerJob(userId: string, jobId: string): Promise<Job | null> {
+  if (!/^\d+$/.test(jobId)) return null;
+  const rows = await query<any>(`SELECT j.*, c.name AS company_name, c.color_hex AS company_color_hex
+    FROM jobs j JOIN companies c ON c.id = j.company_id
+    WHERE j.id = $1 AND c.owner_user_id = $2`, [jobId, userId]);
+  return rows[0] ? mapEmployerJob(rows[0]) : null;
+}
+
+/** Kiểm tra tin tồn tại và trả về chủ sở hữu để service phân biệt 403/404. */
+export async function getJobOwner(jobId: string): Promise<string | null> {
+  if (!/^\d+$/.test(jobId)) return null;
+  const rows = await query<any>("SELECT c.owner_user_id FROM jobs j JOIN companies c ON c.id = j.company_id WHERE j.id = $1", [jobId]);
+  return rows[0] ? String(rows[0].owner_user_id) : null;
+}
+
+/** Tạo tin mới sau khi service đã xác nhận công ty thuộc về người dùng. */
+export async function insertEmployerJob(input: CreateJobInput & { search_text: string }): Promise<Job> {
+  const rows = await query<any>(`INSERT INTO jobs (company_id,title,category,district,address,work_type,wage_per_hour,wage_note,days,shifts,hours_per_week,description,responsibilities,requirements,benefits,experience_required,is_urgent,status,search_text)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb,$14::jsonb,$15::jsonb,$16,$17,'open',$18) RETURNING *`,
+  [input.company_id,input.title,input.category,input.district,input.address,input.work_type,input.wage_per_hour,input.wage_note || "",input.days,input.shifts,input.hours_per_week,input.description,JSON.stringify(input.responsibilities),JSON.stringify(input.requirements),JSON.stringify(input.benefits),input.experience_required,input.is_urgent,input.search_text]);
+  return mapEmployerJob(rows[0]);
+}
+
+/** Cập nhật các trường đã gửi lên, gồm cả search_text khi nội dung tìm kiếm thay đổi. */
+export async function updateEmployerJob(jobId: string, input: UpdateJobInput & { search_text?: string }): Promise<Job | null> {
+  const columns: Record<string, string> = { company_id:"company_id",title:"title",category:"category",district:"district",address:"address",work_type:"work_type",wage_per_hour:"wage_per_hour",wage_note:"wage_note",days:"days",shifts:"shifts",hours_per_week:"hours_per_week",description:"description",responsibilities:"responsibilities",requirements:"requirements",benefits:"benefits",experience_required:"experience_required",is_urgent:"is_urgent",status:"status",search_text:"search_text" };
+  const entries = Object.entries(input).filter(([key, value]) => columns[key] && value !== undefined);
+  const values: unknown[] = [];
+  const setters = entries.map(([key, value]) => { values.push(["responsibilities","requirements","benefits"].includes(key) ? JSON.stringify(value) : value); return `${columns[key]} = $${values.length}${["responsibilities","requirements","benefits"].includes(key) ? "::jsonb" : ""}`; });
+  if (!setters.length) return getJobById(jobId);
+  values.push(jobId);
+  const rows = await query<any>(`UPDATE jobs SET ${setters.join(", ")} WHERE id = $${values.length} RETURNING *`, values);
+  return rows[0] ? mapEmployerJob(rows[0]) : null;
+}
+
+/** Lấy hồ sơ ứng viên theo tin; chỉ chọn các trường được phép công khai. */
+export async function getEmployerApplicants(jobId: string): Promise<EmployerApplicant[]> {
+  if (!/^\d+$/.test(jobId)) return [];
+  const rows = await query<any>(`SELECT a.id, a.job_id, a.status, a.created_at, a.updated_at, a.full_name, a.phone, a.university, a.available_time, a.intro,
+    u.date_of_birth, u.sex, u.major, u.year_of_study
+    FROM applications a JOIN users u ON u.id = a.user_id WHERE a.job_id = $1 ORDER BY a.created_at DESC`, [jobId]);
+  return rows.map((row) => {
+    const dateOfBirth = row.date_of_birth instanceof Date ? row.date_of_birth.toISOString().slice(0,10) : row.date_of_birth ? String(row.date_of_birth).slice(0,10) : null;
+    return { id:String(row.id),job_id:String(row.job_id),status:row.status,createdAt:toIso(row.created_at),updatedAt:toIso(row.updated_at),fullName:row.full_name,phone:row.phone,university:row.university,availableTime:row.available_time,intro:row.intro,age:calculateAge(dateOfBirth,new Date()),sex:row.sex,major:row.major,yearOfStudy:row.year_of_study === null ? null : Number(row.year_of_study),verified:true };
+  });
+}
+
+/** Tìm chủ sở hữu của tin ứng tuyển để áp dụng kiểm tra quyền thống nhất. */
+export async function getApplicationJobOwner(applicationId: string): Promise<{ jobId: string; ownerId: string } | null> {
+  if (!/^\d+$/.test(applicationId)) return null;
+  const rows = await query<any>(`SELECT j.id AS job_id, c.owner_user_id FROM applications a JOIN jobs j ON j.id=a.job_id JOIN companies c ON c.id=j.company_id WHERE a.id=$1`, [applicationId]);
+  return rows[0] ? { jobId:String(rows[0].job_id), ownerId:String(rows[0].owner_user_id) } : null;
+}
+
+/** Đổi trạng thái và chỉ trả về dữ liệu trạng thái của hồ sơ. */
+export async function updateApplicationStatus(applicationId: string, status: ApplicationStatus): Promise<{ id: string; status: ApplicationStatus; updatedAt: string } | null> {
+  const rows = await query<any>("UPDATE applications SET status=$1, updated_at=NOW() WHERE id=$2 RETURNING id,status,updated_at", [status,applicationId]);
+  return rows[0] ? { id:String(rows[0].id), status:rows[0].status, updatedAt:toIso(rows[0].updated_at) } : null;
+}
+
+/** Chuẩn hóa một hàng tin việc làm của PostgreSQL thành kiểu dùng chung. */
+function mapEmployerJob(row: any): Job {
+  return { id:String(row.id),company_id:String(row.company_id),title:row.title,category:row.category,district:row.district,address:row.address,work_type:row.work_type,wage_per_hour:Number(row.wage_per_hour),wage_note:row.wage_note,days:row.days,shifts:row.shifts,hours_per_week:Number(row.hours_per_week),description:row.description,responsibilities:Array.isArray(row.responsibilities)?row.responsibilities:JSON.parse(row.responsibilities || "[]"),requirements:Array.isArray(row.requirements)?row.requirements:JSON.parse(row.requirements || "[]"),benefits:Array.isArray(row.benefits)?row.benefits:JSON.parse(row.benefits || "[]"),experience_required:Boolean(row.experience_required),is_urgent:Boolean(row.is_urgent),status:row.status,posted_at:toIso(row.posted_at),...(row.company_name ? {company_name:row.company_name,company_color_hex:row.company_color_hex} : {}) } as Job;
+}
+
+/** Biến đổi ngày PostgreSQL hoặc ISO thành chuỗi ISO nhất quán. */
+function toIso(value: Date | string): string { return value instanceof Date ? value.toISOString() : new Date(value).toISOString(); }
 
 export async function insertUsersBatch(
   client: PoolClient,

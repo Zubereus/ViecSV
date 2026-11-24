@@ -1,4 +1,40 @@
 // Hàm kiểm tra tính hợp lệ dữ liệu dùng chung Client & Server cho ViệcSV
+import { z } from "zod";
+import { CATEGORIES } from "./constants.js";
+
+const dayValues = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"] as const;
+const shiftValues = ["sang", "chieu", "toi"] as const;
+const workTypeValues = ["tai-cho", "tu-xa", "linh-hoat"] as const;
+const shortLines = z.array(z.string().trim().min(1, "Không được để trống").max(200, "Tối đa 200 ký tự")).min(1, "Vui lòng thêm ít nhất một nội dung").max(12, "Tối đa 12 dòng");
+
+/** Kiểm tra đầy đủ dữ liệu bài đăng của nhà tuyển dụng. */
+export const createJobSchema = z.object({
+  title: z.string().trim().min(5, "Tiêu đề cần ít nhất 5 ký tự").max(120, "Tiêu đề tối đa 120 ký tự"),
+  category: z.enum(CATEGORIES, { errorMap: () => ({ message: "Vui lòng chọn ngành nghề hợp lệ" }) }),
+  district: z.string().trim().min(1, "Vui lòng chọn khu vực").max(80),
+  address: z.string().trim().min(5, "Địa chỉ cần ít nhất 5 ký tự").max(240),
+  work_type: z.enum(workTypeValues, { errorMap: () => ({ message: "Vui lòng chọn hình thức làm việc" }) }),
+  wage_per_hour: z.number().int("Mức lương phải là số nguyên").min(15000, "Mức lương tối thiểu là 15.000đ/giờ").max(500000, "Mức lương tối đa là 500.000đ/giờ"),
+  wage_note: z.string().trim().max(120, "Ghi chú tối đa 120 ký tự").optional().default(""),
+  days: z.array(z.enum(dayValues)).min(1, "Chọn ít nhất một ngày làm").refine((items) => new Set(items).size === items.length, "Không chọn trùng ngày làm"),
+  shifts: z.array(z.enum(shiftValues)).min(1, "Chọn ít nhất một ca làm").refine((items) => new Set(items).size === items.length, "Không chọn trùng ca làm"),
+  hours_per_week: z.number().int().min(1, "Tối thiểu 1 giờ mỗi tuần").max(60, "Tối đa 60 giờ mỗi tuần"),
+  description: z.string().trim().min(20, "Mô tả cần ít nhất 20 ký tự").max(3000, "Mô tả tối đa 3.000 ký tự"),
+  responsibilities: shortLines,
+  requirements: shortLines,
+  benefits: shortLines,
+  experience_required: z.boolean(),
+  is_urgent: z.boolean(),
+  company_id: z.string().regex(/^\d+$/, "Vui lòng chọn công ty hợp lệ"),
+});
+
+/** Cho phép cập nhật một phần nội dung và trạng thái bài đăng. */
+export const updateJobSchema = createJobSchema.partial().extend({ status: z.enum(["open", "closed"]).optional() }).refine((value) => Object.keys(value).length > 0, "Cần có ít nhất một trường để cập nhật");
+
+/** Chỉ nhận các trạng thái ứng tuyển mà nhà tuyển dụng được phép cập nhật. */
+export const updateApplicationStatusSchema = z.object({
+  status: z.enum(["moi", "da-xem", "hen-phong-van", "da-nhan", "tu-choi"], { errorMap: () => ({ message: "Trạng thái ứng tuyển không hợp lệ" }) }),
+});
 
 /**
  * Kiểm tra định dạng Email hợp lệ
@@ -171,4 +207,21 @@ export function validateYearOfStudy(year?: unknown): string | null {
     return "Năm học phải là số từ 1 đến 6";
   }
   return null;
+}
+
+/**
+ * Tính tuổi thuần từ ngày sinh và ngày tham chiếu (YYYY-MM-DD).
+ */
+export function calculateAge(dateOfBirth: string | null | undefined, referenceDate: Date): number | null {
+  if (!dateOfBirth || Number.isNaN(referenceDate.getTime())) return null;
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return null;
+
+  const today = referenceDate;
+  let age = today.getFullYear() - dob.getFullYear();
+  const monthDiff = today.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : null;
 }

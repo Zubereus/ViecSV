@@ -47,15 +47,35 @@ export async function apiRequest<T>(
 
     if (!response.ok) {
       let errorMessage = `Yêu cầu thất bại (${response.status})`;
+      let field: string | undefined;
       try {
         const errData = await response.json();
         if (errData && errData.message) {
           errorMessage = errData.message;
         }
+        if (errData && typeof errData.field === "string") field = errData.field;
       } catch {
         // Giữ nguyên thông báo mặc định nếu phản hồi không phải JSON
       }
-      throw new Error(errorMessage);
+
+      // Nếu phiên đăng nhập hết hạn trong lúc sử dụng, xóa token và chuyển về trang đăng nhập.
+      if (response.status === 401 && typeof window !== "undefined") {
+        const expired =
+          errorMessage.includes("hết hạn") ||
+          errorMessage.includes("không hợp lệ") ||
+          errorMessage.includes("Vui lòng đăng nhập");
+        if (expired) {
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          sessionStorage.setItem("viecsv_auth_message", "Phiên đăng nhập đã hết hạn");
+          if (!window.location.pathname.startsWith("/login")) {
+            window.location.assign("/login");
+          }
+        }
+      }
+
+      const apiError = new Error(errorMessage) as Error & { field?: string };
+      apiError.field = field;
+      throw apiError;
     }
 
     return (await response.json()) as T;

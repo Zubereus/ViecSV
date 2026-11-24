@@ -12,3 +12,9 @@
 - **Bộ lọc & Chip:** Hỗ trợ thanh kéo/nhập lương từ meta, chip ngày làm việc kèm lối tắt "Chỉ cuối tuần", chip ca làm việc sáng/chiều/tối, danh sách đa chọn ngành nghề & quận huyện có số lượng đếm kèm. Toàn bộ bộ lọc đang kích hoạt hiện dưới dạng chip tháo gỡ được phía trên kết quả.
 - **Chuyển trạng thái:** Skeleton loading khớp 100% kích thước thẻ thực tế; giữ danh sách cũ với thanh tiến trình tinh tế khi lọc lại thay vì chớp giật; thông báo rỗng gợi ý cách nới lỏng bộ lọc trực tiếp.
 
+## Ghi Chú Thiết Kế Xác Thực, Hồ Sơ & Ứng Tuyển (Phase 4)
+- **Định hướng & Khí chất:** Giao diện tài khoản và quy trình ứng tuyển hướng đến sự tôn trọng, minh bạch và an tâm tuyệt đối cho sinh viên. Đồ họa không hào nhoáng, không gradient tím xanh hay viền phát sáng; dùng hình khối biên độ rõ ràng, nét viền mỏng `#e2e8f0` và bảng màu tự nhiên (Deep Pine Slate `#0f3d2e`, hổ phách ấm `#d97706`, nền ngà `#fbfbfa`).
+- **Quy trình Đăng ký 3 bước:** Wizard sinh viên chia nhịp nhẹ nhàng (Tài khoản -> Thông tin cá nhân -> Học vấn), thanh tiến trình đo lường trực quan, giữ nguyên dữ liệu khi quay lại bước trước; trường CCCD luôn có ghi chú bảo mật rõ ràng, giải thích việc mã hóa.
+- **Chi tiết việc làm (Job Detail):** Bố cục 2 cột trên desktop với thanh hành động dính (`sticky action sidebar`) và thanh dính đáy (`bottom bar`) trên mobile. Mức lương và các điểm chốt (ca làm, địa chỉ, hình thức) được gom thành khối dữ liệu dễ đối chiếu; modal ứng tuyển có bẫy focus, điền sẵn thông tin từ hồ sơ và bộ đếm ký tự giới thiệu.
+- **Bảo mật & Trạng thái:** Số CCCD luôn hiển thị dạng mặt nạ `•••••••• 1234` và vô hiệu hóa sửa đổi; huy hiệu trạng thái ứng tuyển dùng kết hợp cả biểu tượng (icon) và văn bản rõ nghĩa, không phụ thuộc vào màu sắc đơn thuần. Mọi thông báo lỗi gắn kèm trường dữ liệu với `aria-invalid` và `aria-describedby`.
+

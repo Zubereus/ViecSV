@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  getCategoryDisplayName,
   DAYS_OF_WEEK,
   SHIFT_OPTIONS,
   WORK_TYPE_OPTIONS,
@@ -132,7 +133,7 @@ export function JobFiltersPanel({
             <DollarSign className="w-4 h-4 text-brand-700" />
             Mức lương mong muốn
           </label>
-          <span className="text-xs font-bold text-brand-accent tabular-nums">
+          <span className="text-xs font-bold text-brand-accent-dark tabular-nums">
             {filters.minWage ? `Từ ${new Intl.NumberFormat("vi-VN").format(filters.minWage)}đ/h` : "Tất cả"}
           </span>
         </div>
@@ -166,7 +167,7 @@ export function JobFiltersPanel({
                 key={preset.label}
                 type="button"
                 onClick={() => onFilterChange({ minWage: preset.val, page: 1 })}
-                className={`px-2 py-1 text-xs rounded border transition-colors ${
+                className={`flex-1 whitespace-nowrap px-1.5 py-1 text-xs rounded border transition-colors ${
                   isSelected
                     ? "bg-brand-700 text-white border-brand-700 font-medium"
                     : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50"
@@ -180,7 +181,8 @@ export function JobFiltersPanel({
       </div>
 
       {/* 2. NGÀY CÓ THỂ LÀM VIỆC */}
-      <div className="space-y-2.5 pt-2 border-t border-slate-100">
+      <fieldset className="space-y-2.5 border-t border-slate-100 pt-2">
+        <legend className="sr-only">Ngày có thể làm việc</legend>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
             <Calendar className="w-4 h-4 text-brand-700" />
@@ -189,6 +191,7 @@ export function JobFiltersPanel({
           <button
             type="button"
             onClick={toggleWeekend}
+            aria-pressed={isWeekendOnly}
             className={`text-xs px-2 py-0.5 rounded transition-colors ${
               isWeekendOnly
                 ? "bg-brand-100 text-brand-800 font-semibold"
@@ -200,7 +203,7 @@ export function JobFiltersPanel({
         </div>
 
         {/* Chips các ngày trong tuần */}
-        <div className="grid grid-cols-4 gap-1.5">
+        <div role="group" aria-label="Chọn ngày có thể làm" className="grid grid-cols-4 gap-1.5">
           {DAYS_OF_WEEK.map((d) => {
             const isSelected = filters.days.includes(d.value);
             return (
@@ -208,6 +211,7 @@ export function JobFiltersPanel({
                 key={d.value}
                 type="button"
                 onClick={() => toggleDay(d.value)}
+                aria-pressed={isSelected}
                 className={`py-1.5 text-xs text-center rounded border transition-colors ${
                   isSelected
                     ? "bg-brand-700 text-white border-brand-700 font-semibold"
@@ -219,16 +223,16 @@ export function JobFiltersPanel({
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       {/* 3. CA LÀM VIỆC */}
-      <div className="space-y-2.5 pt-2 border-t border-slate-100">
-        <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+      <fieldset className="space-y-2.5 border-t border-slate-100 pt-2">
+        <legend className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
           <Clock className="w-4 h-4 text-brand-700" />
           Ca làm việc
-        </span>
+        </legend>
 
-        <div className="flex flex-col gap-1.5">
+        <div role="group" aria-label="Chọn ca làm việc" className="flex flex-col gap-1.5">
           {SHIFT_OPTIONS.map((s) => {
             const isSelected = filters.shifts.includes(s.value);
             return (
@@ -236,6 +240,7 @@ export function JobFiltersPanel({
                 key={s.value}
                 type="button"
                 onClick={() => toggleShift(s.value)}
+                aria-pressed={isSelected}
                 className={`px-3 py-2 text-left text-xs rounded-md border flex items-center justify-between transition-colors ${
                   isSelected
                     ? "bg-brand-50 text-brand-800 border-brand-500 font-semibold"
@@ -248,7 +253,7 @@ export function JobFiltersPanel({
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       {/* 4. KHÔNG YÊU CẦU KINH NGHIỆM */}
       <div className="pt-2 border-t border-slate-100">
@@ -327,9 +332,9 @@ export function JobFiltersPanel({
                       onChange={() => toggleCategory(c.name)}
                       className="w-3.5 h-3.5 rounded text-brand-700 border-slate-300 focus:ring-brand-700 accent-brand-700 shrink-0"
                     />
-                    <span className="truncate">{c.name}</span>
+                    <span className="truncate">{getCategoryDisplayName(c.name)}</span>
                   </div>
-                  <span className="text-[11px] text-slate-400 tabular-nums shrink-0 ml-1">
+                  <span className="text-[11px] text-slate-600 tabular-nums shrink-0 ml-1">
                     {c.count}
                   </span>
                 </label>
@@ -375,7 +380,7 @@ export function JobFiltersPanel({
                     />
                     <span className="truncate">{d.name}</span>
                   </div>
-                  <span className="text-[11px] text-slate-400 tabular-nums shrink-0 ml-1">
+                  <span className="text-[11px] text-slate-600 tabular-nums shrink-0 ml-1">
                     {d.count}
                   </span>
                 </label>

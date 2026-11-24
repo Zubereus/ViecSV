@@ -114,7 +114,7 @@ jobsRouter.get(
       if (!job) {
         res.status(404).json({
           ok: false,
-          message: "Không tìm thấy công việc",
+          message: "Không tìm thấy tin tuyển dụng",
         });
         return;
       }
@@ -140,7 +140,7 @@ jobsRouter.get(
       if (!job) {
         res.status(404).json({
           ok: false,
-          message: "Không tìm thấy công việc",
+          message: "Không tìm thấy tin tuyển dụng",
         });
         return;
       }
@@ -171,7 +171,7 @@ jobsRouter.post(
       if (!job) {
         res.status(404).json({
           ok: false,
-          message: "Không tìm thấy công việc",
+          message: "Không tìm thấy tin tuyển dụng",
         });
         return;
       }

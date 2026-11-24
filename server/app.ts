@@ -5,6 +5,7 @@ import { authRouter } from "./routes/auth.routes.js";
 import { profileRouter } from "./routes/profile.routes.js";
 import { jobsRouter } from "./routes/jobs.routes.js";
 import { studentRouter } from "./routes/student.routes.js";
+import { employerRouter } from "./routes/employer.routes.js";
 
 // Khởi tạo ứng dụng Express cho ViệcSV
 export const app = express();
@@ -33,6 +34,7 @@ app.get("/api/health", async (_req: Request, res: Response, next: NextFunction) 
 app.use("/api/auth", authRouter);
 app.use("/api", profileRouter);
 app.use("/api", jobsRouter);
+app.use("/api", employerRouter);
 app.use("/api", studentRouter);
 
 // 3. Xử lý đường dẫn API không tồn tại (404)
@@ -61,7 +63,7 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   }
 
   // Lỗi máy chủ không mong muốn: ghi log nội bộ bảo mật, trả về thông báo 500 tiếng Việt
-  console.error("[Lỗi Máy Chủ ViệcSV]:", err);
+  console.error("[Lỗi Máy Chủ ViệcSV] Lỗi nội bộ không mong muốn.");
   res.status(500).json({
     ok: false,
     message: "Có lỗi xảy ra, vui lòng thử lại",

@@ -42,7 +42,7 @@ studentRouter.put(
       if (!job) {
         res.status(404).json({
           ok: false,
-          message: "Không tìm thấy công việc",
+          message: "Không tìm thấy việc làm",
         });
         return;
       }

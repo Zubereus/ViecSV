@@ -1,6 +1,7 @@
 @baseUrl = http://localhost:3001/api
 @studentToken = 
 @employerToken = 
+@otherEmployerToken =
 
 ### 1. Kiểm tra trạng thái máy chủ
 GET {{baseUrl}}/health
@@ -56,3 +57,101 @@ Authorization: Bearer {{studentToken}}
 ### 12. Danh sách hồ sơ ứng tuyển của tôi
 GET {{baseUrl}}/applications/mine
 Authorization: Bearer {{studentToken}}
+
+### 13. Tóm tắt bảng điều khiển nhà tuyển dụng
+GET {{baseUrl}}/employer/summary
+Authorization: Bearer {{employerToken}}
+
+### 14. Các công ty thuộc quyền nhà tuyển dụng
+GET {{baseUrl}}/employer/companies
+Authorization: Bearer {{employerToken}}
+
+### 15. Danh sách tin và số lượng hồ sơ
+GET {{baseUrl}}/employer/jobs
+Authorization: Bearer {{employerToken}}
+
+### 16. Đăng tin hợp lệ (thay company_id bằng id từ /employer/companies)
+# @name createEmployerJob
+POST {{baseUrl}}/employer/jobs
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "company_id": "1",
+  "title": "Nhân viên phục vụ ca tối",
+  "category": "Phục vụ / F&B",
+  "district": "Quận 1",
+  "address": "12 Nguyễn Huệ, Quận 1",
+  "work_type": "tai-cho",
+  "wage_per_hour": 35000,
+  "wage_note": "Có phụ cấp ca tối",
+  "days": ["T6", "T7", "CN"],
+  "shifts": ["toi"],
+  "hours_per_week": 20,
+  "description": "Đón tiếp khách và phục vụ tại cửa hàng trong ca tối.",
+  "responsibilities": ["Ghi nhận món khách gọi", "Giữ khu vực làm việc sạch sẽ"],
+  "requirements": ["Giao tiếp lịch sự"],
+  "benefits": ["Được hướng dẫn khi bắt đầu"],
+  "experience_required": false,
+  "is_urgent": true
+}
+
+### 17. Lỗi validation (mức lương dưới mức tối thiểu)
+POST {{baseUrl}}/employer/jobs
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "company_id": "1",
+  "title": "Nhân viên phục vụ ca tối",
+  "category": "Phục vụ / F&B",
+  "district": "Quận 1",
+  "address": "12 Nguyễn Huệ, Quận 1",
+  "work_type": "tai-cho",
+  "wage_per_hour": 1000,
+  "days": ["T7"],
+  "shifts": ["toi"],
+  "hours_per_week": 20,
+  "description": "Đón tiếp khách và phục vụ tại cửa hàng trong ca tối.",
+  "responsibilities": ["Phục vụ khách"],
+  "requirements": ["Giao tiếp tốt"],
+  "benefits": ["Được hướng dẫn"],
+  "experience_required": false,
+  "is_urgent": false
+}
+
+### 18. Kiểm tra token sinh viên bị từ chối (403)
+GET {{baseUrl}}/employer/jobs
+Authorization: Bearer {{studentToken}}
+
+### 19. Kiểm tra thiếu token (401)
+GET {{baseUrl}}/employer/jobs
+
+### 20. Xem hoặc sửa tin của tôi (dùng ID phản hồi createEmployerJob)
+GET {{baseUrl}}/employer/jobs/1
+Authorization: Bearer {{employerToken}}
+
+PATCH {{baseUrl}}/employer/jobs/1
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "status": "closed"
+}
+
+### 21. Nhà tuyển dụng khác truy cập tin không thuộc quyền (403)
+GET {{baseUrl}}/employer/jobs/1
+Authorization: Bearer {{otherEmployerToken}}
+
+### 22. Xem ứng viên (chỉ trả các trường được phép; không có CCCD, email hoặc mật khẩu)
+GET {{baseUrl}}/employer/jobs/1/applications
+Authorization: Bearer {{employerToken}}
+
+### 23. Cập nhật trạng thái ứng viên
+PATCH {{baseUrl}}/employer/applications/1
+Authorization: Bearer {{employerToken}}
+Content-Type: application/json
+
+{
+  "status": "hen-phong-van"
+}

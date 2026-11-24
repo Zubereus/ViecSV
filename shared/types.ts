@@ -122,16 +122,6 @@ export interface JobMetaResponse {
   totalOpenJobs: number;
 }
 
-/** Phản hồi trạng thái hệ thống */
-export interface ApiHealthResponse {
-  ok: boolean;
-  db?: boolean;
-  jobs?: number;
-  message: string;
-  timestamp: string;
-  env: string;
-}
-
 /** Dữ liệu đăng ký tài khoản sinh viên */
 export interface RegisterStudentInput {
   email: string;
@@ -188,4 +178,78 @@ export interface ApplyJobInput {
   university: string;
   intro?: string;
   availableTime: string;
+}
+
+/** Tóm tắt số liệu bảng điều khiển nhà tuyển dụng */
+export interface EmployerSummary {
+  openJobs: number;
+  closedJobs: number;
+  newApplications: number;
+  interviewApplications: number;
+  totalApplications: number;
+}
+
+/** Doanh nghiệp thuộc sở hữu của nhà tuyển dụng */
+export interface EmployerCompany {
+  id: string;
+  name: string;
+  color_hex: string;
+}
+
+/** Việc làm trong danh sách quản lý của nhà tuyển dụng */
+export interface EmployerJobListItem extends Job {
+  company_name: string;
+  company_color_hex: string;
+  applicant_count: number;
+  new_applicant_count: number;
+  interview_applicant_count: number;
+}
+
+/** Dữ liệu tạo tin tuyển dụng mới */
+export interface CreateJobInput {
+  title: string;
+  category: string;
+  district: string;
+  address: string;
+  work_type: WorkType;
+  wage_per_hour: number;
+  wage_note?: string;
+  days: DayOfWeek[];
+  shifts: Shift[];
+  hours_per_week: number;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  benefits: string[];
+  experience_required: boolean;
+  is_urgent: boolean;
+  company_id: string;
+}
+
+/** Dữ liệu chỉnh sửa tin tuyển dụng */
+export interface UpdateJobInput extends Partial<CreateJobInput> {
+  status?: JobStatus;
+}
+
+/** Thông tin ứng viên hiển thị cho nhà tuyển dụng (TUYỆT ĐỐI không có CCCD, email, mật khẩu) */
+export interface EmployerApplicant {
+  id: string;
+  job_id: string;
+  status: ApplicationStatus;
+  createdAt: string;
+  updatedAt: string;
+  fullName: string;
+  phone: string;
+  university: string;
+  availableTime: string;
+  intro: string;
+  age: number | null;
+  sex: Sex | null;
+  major: string | null;
+  yearOfStudy: number | null;
+  verified: boolean;
+}
+
+export interface UpdateEmployerApplicationInput {
+  status: ApplicationStatus;
 }

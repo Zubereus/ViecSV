@@ -24,8 +24,10 @@ import { JobFiltersPanel } from "../components/JobFiltersPanel";
 import { ActiveFilterChips } from "../components/ActiveFilterChips";
 import { MobileFilterDrawer } from "../components/MobileFilterDrawer";
 import { Pagination } from "../components/Pagination";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 export function HomePage() {
+  useDocumentTitle("Tìm việc làm thêm");
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Đọc bộ lọc từ URL Query String
@@ -195,14 +197,14 @@ export function HomePage() {
       <section aria-label="Tìm kiếm việc làm">
         <div className="bg-white border border-slate-200 rounded-lg p-2.5 sm:p-3 shadow-card focus-within:border-brand-700 transition-colors">
           <div className="flex items-center gap-2">
-            <div className="relative flex-1 flex items-center">
+              <div className="relative flex-1 min-w-0 flex items-center">
               <Search className="w-5 h-5 text-slate-400 absolute left-3 pointer-events-none" />
               <input
                 type="text"
                 value={keywordInput}
                 onChange={(e) => setKeywordInput(e.target.value)}
-                placeholder="Tìm theo tên việc, công ty, kỹ năng (ví dụ: gia sư, pha chế, Q.1...)"
-                className="w-full pl-10 pr-9 py-2 text-sm sm:text-base bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none"
+                placeholder="Tìm việc hoặc công ty..."
+                className="w-full min-w-0 pl-10 pr-9 py-2 text-sm sm:text-base bg-transparent text-slate-900 placeholder-slate-600 focus:outline-none"
                 aria-label="Từ khóa tìm kiếm việc làm"
               />
               {keywordInput && (
@@ -221,7 +223,7 @@ export function HomePage() {
             </div>
 
             {/* Nút mở bộ lọc trên thiết bị di động */}
-            <div className="md:hidden shrink-0 border-l border-slate-200 pl-2">
+            <div className="xl:hidden shrink-0 border-l border-slate-200 pl-2">
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(true)}
@@ -246,14 +248,14 @@ export function HomePage() {
 
         {/* Dòng copy súc tích dưới thanh tìm kiếm (chuẩn phong cách operate) */}
         <p className="mt-2 text-xs text-slate-500">
-          Tra cứu việc làm thêm sinh viên theo giờ, ca linh hoạt và địa điểm cụ thể tại TP. Hồ Chí Minh.
+          Tìm việc làm thêm theo giờ, ca linh hoạt và địa điểm tại TP. Hồ Chí Minh.
         </p>
       </section>
 
       {/* 2. BỐ CỤC 2 CỘT CHÍNH (DESKTOP: STICKY FILTERS + RESULTS) */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 lg:gap-8 items-start">
         {/* Cột trái: Panel bộ lọc dính (Sticky desktop sidebar) */}
-        <aside className="hidden md:block md:col-span-4 lg:col-span-3 sticky top-20 bg-white border border-slate-200/90 rounded-lg p-4 sm:p-5 shadow-card max-h-[calc(100vh-6rem)] overflow-y-auto">
+        <aside className="hidden xl:col-span-3 xl:block sticky top-20 bg-white border border-slate-200/90 rounded-lg p-4 sm:p-5 shadow-card max-h-[calc(100vh-6rem)] overflow-y-auto">
           <JobFiltersPanel
             filters={filters}
             meta={meta}
@@ -264,14 +266,15 @@ export function HomePage() {
         </aside>
 
         {/* Cột phải: Hàng kết quả & Danh sách việc làm */}
-        <main
+        <section
           ref={resultsContainerRef}
-          className="col-span-1 md:col-span-8 lg:col-span-9 space-y-4"
+          aria-labelledby="search-results-heading"
+          className="col-span-1 xl:col-span-9 space-y-4"
         >
           {/* Thanh tiêu đề kết quả & Sắp xếp */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200/80">
             <div className="flex items-center gap-2">
-              <h1 className="font-display font-semibold text-base sm:text-lg text-slate-900 tracking-tight">
+              <h1 id="search-results-heading" className="font-display font-semibold text-base sm:text-lg text-slate-900 tracking-tight">
                 {initialLoading ? (
                   "Đang tải việc làm..."
                 ) : (
@@ -398,7 +401,7 @@ export function HomePage() {
               onPageChange={handlePageChange}
             />
           )}
-        </main>
+        </section>
       </div>
 
       {/* DRAWER BỘ LỌC CHO GIAO DIỆN DI ĐỘNG (MOBILE BOTTOM SHEET) */}

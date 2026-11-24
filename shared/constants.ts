@@ -88,6 +88,15 @@ export const CATEGORIES = [
   "IT hỗ trợ / Lập trình",
 ] as const;
 
+/** Giữ nguyên giá trị lưu trữ cũ, chỉ Việt hóa nhãn hiển thị. */
+export const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  "Content / Social media": "Nội dung / Mạng xã hội",
+};
+
+export function getCategoryDisplayName(category: string): string {
+  return CATEGORY_DISPLAY_NAMES[category] || category;
+}
+
 /** Danh sách ca làm việc phổ biến */
 export const SHIFT_MAP = {
   sang: "Ca sáng (06:00 – 12:00)",
@@ -104,13 +113,13 @@ export const SHIFT_OPTIONS = [
 /** Hình thức làm việc */
 export const WORK_TYPE_MAP = {
   "tai-cho": "Tại chỗ",
-  "tu-xa": "Từ xa / Online",
+  "tu-xa": "Từ xa / Trực tuyến",
   "linh-hoat": "Linh hoạt / Kết hợp",
 } as const;
 
 export const WORK_TYPE_OPTIONS = [
   { value: "tai-cho", label: "Tại chỗ" },
-  { value: "tu-xa", label: "Từ xa / Online" },
+  { value: "tu-xa", label: "Từ xa / Trực tuyến" },
   { value: "linh-hoat", label: "Linh hoạt / Kết hợp" },
 ] as const;
 

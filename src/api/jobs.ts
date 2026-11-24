@@ -51,6 +51,8 @@ export async function fetchJobDetail(
   return apiRequest<{ ok: boolean; job: Job }>(`/api/jobs/${id}`, { signal });
 }
 
+export const fetchJobById = fetchJobDetail;
+
 /**
  * Lấy danh sách việc làm tương tự cùng danh mục
  */
