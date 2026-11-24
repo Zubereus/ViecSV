@@ -3,7 +3,7 @@ import { requireAuth } from "../middleware/auth.middleware.js";
 import { EmployerAccessError, assertEmployerOwnsJob, createEmployerJob, editEmployerJob } from "../services/employer.service.js";
 import { getEmployerApplicants, getEmployerCompanies, getEmployerJob, getEmployerJobs, getEmployerSummary, getApplicationJobOwner, getJobOwner, updateApplicationStatus } from "../db/queries.js";
 import { createJobSchema, updateApplicationStatusSchema, updateJobSchema } from "../../shared/validators.js";
-import type { UpdateJobInput } from "../../shared/types.js";
+import type { CreateJobInput, UpdateJobInput } from "../../shared/types.js";
 
 export const employerRouter = Router();
 employerRouter.use("/employer", requireAuth("employer"));
@@ -30,7 +30,9 @@ employerRouter.post("/employer/jobs", async (req: Request, res: Response, next: 
   try {
     const parsed = createJobSchema.safeParse(req.body);
     if (!parsed.success) { const issue=parsed.error.issues[0]; res.status(400).json({ok:false,message:issue?.message || "Dữ liệu tin tuyển dụng chưa hợp lệ",field:issue?.path.join(".")}); return; }
-    res.status(201).json({ ok:true, job:await createEmployerJob(req.user!.id, parsed.data) });
+    // Sau khi schema xác thực thành công, chuẩn hóa kiểu đầu ra tại ranh giới Zod.
+    const input = parsed.data as CreateJobInput;
+    res.status(201).json({ ok:true, job:await createEmployerJob(req.user!.id, input) });
   } catch (error) { handleError(error,next,res); }
 });
 
