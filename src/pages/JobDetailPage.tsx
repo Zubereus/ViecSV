@@ -22,6 +22,7 @@ import { fetchJobById, fetchSimilarJobs } from "../api/jobs";
 import { fetchMyApplications } from "../api/applications";
 import { JobCard } from "../components/JobCard";
 import { ApplyModal } from "../components/ApplyModal";
+import { getJobCategoryImage } from "../lib/jobCategoryImages";
 import { useAuth } from "../lib/AuthContext";
 import { useSavedJobs } from "../lib/SavedJobsContext";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
@@ -30,8 +31,6 @@ import {
   formatPostedAt,
   formatDays,
   formatShifts,
-  getMonogram,
-  getReadableTextColor,
 } from "../lib/format";
 import { formatDate } from "../lib/profile";
 import { WORK_TYPE_MAP } from "../../shared/constants";
@@ -55,6 +54,7 @@ export function JobDetailPage() {
   const [bookmarkError, setBookmarkError] = useState<string | null>(null);
   const [isTogglingSave, setIsTogglingSave] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [failedImageJobId, setFailedImageJobId] = useState<string | null>(null);
 
   // Cập nhật title trình duyệt
   const pageTitle = job
@@ -220,9 +220,8 @@ export function JobDetailPage() {
   }
 
   const companyName = job.company?.name || "Doanh nghiệp";
-  const monogram = getMonogram(companyName);
-  const companyColor = job.company?.color_hex || "#0f3d2e";
-  const textColor = getReadableTextColor(companyColor);
+  const categoryImage = getJobCategoryImage(job.category);
+  const imageFailed = failedImageJobId === job.id;
   const isClosed = job.status === "closed";
 
   return (
@@ -269,91 +268,108 @@ export function JobDetailPage() {
         {/* CỘT CHÍNH (2/3) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Card Tiêu đề & Thông tin cơ bản */}
-          <div className="bg-white border border-slate-200/90 rounded-xl p-5 sm:p-7 shadow-card space-y-6">
-            <div className="flex items-start gap-4 sm:gap-5">
+          <div className="overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-card">
+            <div className="grid grid-cols-1 xl:grid-cols-[minmax(13rem,0.8fr)_minmax(0,1.7fr)]">
               <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center font-display font-bold text-lg sm:text-xl shrink-0 border border-black/5 shadow-sm"
-                style={{ backgroundColor: companyColor, color: textColor }}
-                aria-hidden="true"
+                className="relative aspect-[16/9] overflow-hidden bg-brand-50 xl:aspect-auto xl:min-h-[230px]"
+                role="img"
+                aria-label={`Ảnh minh họa ngành ${job.category}`}
               >
-                {monogram}
-              </div>
-
-              <div className="min-w-0 flex-1 space-y-1.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  {job.is_urgent && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                      <Zap className="w-3 h-3 text-amber-600 fill-amber-600" /> Tuyển gấp
-                    </span>
-                  )}
-                  {isClosed && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
-                      Đã đóng tuyển dụng
-                    </span>
-                  )}
-                  <span className="text-xs text-slate-600">
-                    Đăng {formatPostedAt(job.posted_at)}
-                  </span>
-                </div>
-
-                <h1 className="font-display font-bold text-xl sm:text-2xl text-slate-900 leading-snug">
-                  {job.title}
-                </h1>
-
-                <p className="text-sm sm:text-base font-semibold text-slate-700">
-                  {companyName}
-                </p>
-
-                <div className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-600 pt-0.5">
-                  <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                  <span>{job.address}, {job.district}, TP. Hồ Chí Minh</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Khối tóm tắt thông số quan trọng (Key Info Grid) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-surface-ground rounded-lg border border-slate-200/70">
-              <div>
-                <span className="block text-xs text-slate-600 font-medium">Mức lương</span>
-                <span className="font-display font-bold text-base sm:text-lg text-brand-700">
-                  {formatWage(job.wage_per_hour)}
-                </span>
-                {job.wage_note && (
-                  <span className="block text-xs text-slate-600 font-normal mt-0.5">{job.wage_note}</span>
+                {imageFailed ? (
+                  <div className="flex h-full min-h-40 items-center justify-center text-brand-700">
+                    <Briefcase className="h-10 w-10" aria-hidden="true" />
+                  </div>
+                ) : (
+                  <img
+                    src={categoryImage.src}
+                    alt=""
+                    loading="eager"
+                    decoding="async"
+                    onError={() => setFailedImageJobId(job.id)}
+                    className={`absolute inset-0 h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02] motion-reduce:transform-none motion-reduce:transition-none ${categoryImage.position}`}
+                  />
                 )}
               </div>
 
-              <div>
-                <span className="block text-xs text-slate-600 font-medium">Hình thức</span>
-                <span className="text-sm font-semibold text-slate-800">
-                  {WORK_TYPE_MAP[job.work_type] || job.work_type}
-                </span>
-              </div>
+              <div className="min-w-0 space-y-6 p-5 sm:p-7">
+                <div className="min-w-0 space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {job.is_urgent && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <Zap className="w-3 h-3 text-amber-600 fill-amber-600" /> Tuyển gấp
+                      </span>
+                    )}
+                    {isClosed && (
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                        Đã đóng tuyển dụng
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-600">
+                      Đăng {formatPostedAt(job.posted_at)}
+                    </span>
+                  </div>
 
-              <div>
-                <span className="block text-xs text-slate-600 font-medium">Kinh nghiệm</span>
-                <span className="text-sm font-semibold text-slate-800">
-                  {job.experience_required ? "Cần kinh nghiệm" : "Không yêu cầu"}
-                </span>
-              </div>
+                  <h1 className="font-display font-bold text-xl sm:text-2xl text-slate-900 leading-snug">
+                    {job.title}
+                  </h1>
 
-              <div className="col-span-2 sm:col-span-3 pt-2 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <span className="block text-xs text-slate-600 font-medium mb-1 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-slate-600" /> Ngày làm việc:
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-800 font-medium">
-                    {formatDays(job.days)}
-                  </span>
+                  <p className="text-sm sm:text-base font-semibold text-slate-700">
+                    {companyName}
+                  </p>
+
+                  <div className="flex items-start gap-1.5 text-xs sm:text-sm text-slate-600 pt-0.5">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+                    <span>{job.address}, {job.district}, TP. Hồ Chí Minh</span>
+                  </div>
                 </div>
 
-                <div>
-                  <span className="block text-xs text-slate-600 font-medium mb-1 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-slate-600" /> Ca làm việc:
-                  </span>
-                  <span className="text-xs sm:text-sm text-slate-800 font-medium">
-                    {formatShifts(job.shifts)} ({job.hours_per_week}h/tuần)
-                  </span>
+                {/* Gom lương, lịch và yêu cầu vào cùng một vùng để dễ so sánh. */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-surface-ground rounded-lg border border-slate-200/70">
+                  <div>
+                    <span className="block text-xs text-slate-600 font-medium">Mức lương</span>
+                    <span className="font-display font-bold text-base sm:text-lg text-brand-700">
+                      {formatWage(job.wage_per_hour)}
+                    </span>
+                    {job.wage_note && (
+                      <span className="block text-xs text-slate-600 font-normal mt-0.5">
+                        {job.wage_note}
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="block text-xs text-slate-600 font-medium">Hình thức</span>
+                    <span className="text-sm font-semibold text-slate-800">
+                      {WORK_TYPE_MAP[job.work_type] || job.work_type}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="block text-xs text-slate-600 font-medium">Kinh nghiệm</span>
+                    <span className="text-sm font-semibold text-slate-800">
+                      {job.experience_required ? "Cần kinh nghiệm" : "Không yêu cầu"}
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 sm:col-span-3 pt-2 border-t border-slate-200/60 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <span className="block text-xs text-slate-600 font-medium mb-1 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5 text-slate-600" /> Ngày làm việc:
+                      </span>
+                      <span className="text-xs sm:text-sm text-slate-800 font-medium">
+                        {formatDays(job.days)}
+                      </span>
+                    </div>
+
+                    <div>
+                      <span className="block text-xs text-slate-600 font-medium mb-1 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-slate-600" /> Ca làm việc:
+                      </span>
+                      <span className="text-xs sm:text-sm text-slate-800 font-medium">
+                        {formatShifts(job.shifts)} ({job.hours_per_week}h/tuần)
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
