@@ -1,0 +1,114 @@
+[
+  {
+    "ghi_chu": "Tài khoản Sinh viên Demo chính",
+    "email": "sinhvien@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Nguyễn Minh Anh",
+    "truong": "ĐH Bách Khoa (ĐHQG-HCM)"
+  },
+  {
+    "ghi_chu": "Tài khoản Doanh nghiệp / Nhà tuyển dụng Demo chính",
+    "email": "tuyendung@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "employer",
+    "ho_ten": "Trần Hoàng Nam",
+    "cong_ty": "Sở hữu 3 công ty và ~15 việc làm"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 1",
+    "email": "bao.le@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Lê Quốc Bảo",
+    "truong": "ĐH Kinh tế TP.HCM (UEH)"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 2",
+    "email": "phuong.tran@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Trần Thị Mai Phương",
+    "truong": "ĐH Khoa học Tự nhiên (ĐHQG-HCM)"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 3",
+    "email": "huy.pham@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Phạm Đức Huy",
+    "truong": "ĐH Công nghệ Thông tin (ĐHQG-HCM)"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 4",
+    "email": "linh.hoang@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Hoàng Ngọc Linh",
+    "truong": "ĐH Quốc tế (ĐHQG-HCM)"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 5",
+    "email": "khiem.do@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Đỗ Gia Khiêm",
+    "truong": "ĐH Sư phạm Kỹ thuật TP.HCM"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 6",
+    "email": "duong.vu@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Vũ Thùy Dương",
+    "truong": "ĐH Sư phạm TP.HCM"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 7",
+    "email": "phat.nguyen@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Nguyễn Tấn Phát",
+    "truong": "ĐH Tôn Đức Thắng"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 8",
+    "email": "huyen.bui@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Bùi Khánh Huyền",
+    "truong": "ĐH Ngân hàng TP.HCM"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 9",
+    "email": "khoi.dang@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Đặng Minh Khôi",
+    "truong": "ĐH Văn Lang"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 10",
+    "email": "tram.phan@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Phan Bảo Trâm",
+    "truong": "ĐH Sài Gòn"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 11",
+    "email": "nam.vo@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Võ Nhật Nam",
+    "truong": "ĐH Công nghiệp TP.HCM"
+  },
+  {
+    "ghi_chu": "Sinh viên ứng tuyển mẫu 12",
+    "email": "thao.ho@demo.vn",
+    "mat_khau_demo": "demo1234",
+    "vai_tro": "student",
+    "ho_ten": "Hồ Phương Thảo",
+    "truong": "ĐH Y Dược TP.HCM"
+  }
+]

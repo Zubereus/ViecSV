@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:3001/api
+@studentToken = 
+@employerToken = 
+
+### 1. Kiểm tra trạng thái máy chủ
+GET {{baseUrl}}/health
+
+### 2. Dữ liệu Meta bộ lọc
+GET {{baseUrl}}/meta
+
+### 3. Tìm kiếm việc làm mở
+GET {{baseUrl}}/jobs?q=gia su&sort=luong-cao&page=1&pageSize=10
+
+### 4. Chi tiết công việc
+GET {{baseUrl}}/jobs/1
+
+### 5. Việc làm tương tự
+GET {{baseUrl}}/jobs/1/similar
+
+### 6. Đăng nhập Sinh viên Demo
+# @name loginStudent
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "sinhvien@demo.vn",
+  "password": "demo1234"
+}
+
+### 7. Đăng nhập Nhà tuyển dụng Demo
+# @name loginEmployer
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "tuyendung@demo.vn",
+  "password": "demo1234"
+}
+
+### 8. Lấy thông tin cá nhân hiện tại
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{studentToken}}
+
+### 9. Danh sách việc làm đã lưu của sinh viên
+GET {{baseUrl}}/saved
+Authorization: Bearer {{studentToken}}
+
+### 10. Lưu một công việc
+PUT {{baseUrl}}/saved/5
+Authorization: Bearer {{studentToken}}
+
+### 11. Hủy lưu một công việc
+DELETE {{baseUrl}}/saved/5
+Authorization: Bearer {{studentToken}}
+
+### 12. Danh sách hồ sơ ứng tuyển của tôi
+GET {{baseUrl}}/applications/mine
+Authorization: Bearer {{studentToken}}
